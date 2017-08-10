@@ -1,7 +1,7 @@
 name 'elassandra'
 maintainer 'Aoi Kadoya'
 maintainer_email 'cadyan.aoi@gmail.com'
-license 'Apache v2.0'
+license 'Apache 2.0'
 description 'Installs elassandra'
 long_description 'Installs elassandra'
 version '0.1.0'
