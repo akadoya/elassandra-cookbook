@@ -11,5 +11,6 @@ platforms:
 suites:
   - name: default
     run_list:
-      - recipe[gdisktest::default]
+      - recipe[apt]
+      - recipe[elassandra::default]
     attributes:

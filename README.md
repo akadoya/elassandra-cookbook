@@ -1,14 +1,36 @@
 Description
 ===========
 
-Provides gdisk_partition resource.
-MBR partitions will be converted to GPT format.
+Installs (Elassandra)[http://elassandra.readthedocs.io/] service.
 
 Requirements
 ============
 
+Cookbook:
+- `java`
+- `poise-python`
+
 Platform:
 - Ubuntu 16.04
+
+Attributes
+==========
+
+default
+-------
+
+| Attribute                                    | Default                                | Description                       |
+|----------------------------------------------|:--------------------------------------:|-----------------------------------|
+| `node['elassandra']['install_type']`         | `'tar'`                                | The type of install: only `tar` works for now. |
+| `node['elassandra']['release_version']`      | `'2.4.5.3'`                            | The version to install.  |
+| `node['elassandra']['install_prefix']`       | `'/opt/elassandra'`                    | The parent directory path for elassandra installation  |
+| `node['elassandra']['tar']['download_url']`  | `'https://github.com/strapdata/elassandra/releases/download/v#{node['elassandra']['release_version']}/elassandra-#{node['elassandra']['release_version']}.tar.gz'` | The download url for tar ball |
+| `node['elassandra']['tar']['checksum']`      | `'34b8599a9806870b3fbe7e638fb38233dd1df459b9601efa724b9b2c4023a4b3'` | The SHA256 checksum of Elassandra tar archive |
+| `node['elassandra']['pid']`                  | `'/var/run/cassandra/cassandra.pid'`   | The pid file location             |
+| `node['elassandra']['user']`                 | `'cassandra'`                          | Elassandra service user           |
+| `node['elassandra']['group']`                | `'cassandra'`                          | Elassandra service group          |
+| `node['cassandra']['cqlsh']['enabled']`      | `true`                                 | Whether to enable cqlsh           |
+
 
 Recipes
 =======
@@ -17,52 +39,35 @@ default
 -------
 
 The default recipe will:
+- Install elassandra
+- Define elassandra service
 
-- install `filesize` gem used in `libraries/helper.rb`
-- install `gdisk` and `parted` 
+**Note**
 
+This default recipe doesn't start the elassandra service.
 
 Usage
 =====
 
-Simply add `gdisk::default` recipe to the run_list for the node you want to manage the GPT partitions.
-See the `gdisktest` recipe for examples.
+Simply include `elassandra::default` in your wrapper recipe and configure `conf/cassandra.yaml`, then start the service.
 
-Resources/Providers
-===================
+Wrapper recipe example
+----------------------
 
-The following gems and packages are used by the custom resources and are installed by the default recipe:
+```ruby
+include_recipe 'elassandra::default'
+installation_path = "#{node['elassandra']['install_prefix']}/elassandra-#{node['elassandra']['release_version']}"
+template "#{installation_path}"/conf/cassandra.yaml do
+  source "cassandra.yaml.erb"
+  mode 0644
+  variables(
+   :cluster_name => 'cassandra-cluster',
+   :datacenter => 'datacenter1'
+  )
+  notifies :start, 'service[elassandra]', :delayed
+end
+```
 
-- Gem : `filesize`
-- Package : `gdisk`, `parted`
-
-gdisk_partition
----------------
-
-This resource creates a partition and changes the partition type.
-MBR partitions will be converted to GPT format.
-
-#### Attributes
-
-| Attribute       | Type     | Description                                                                    |
-|-----------------|:--------:|:-------------------------------------------------------------------------------|
-| `device_name`   | `String` | *required* target device file path : `/dev/sda`                                |
-| `number`        | `Integer`| *required* partition number : `1`                                              |
-| `type`          | `String` | GPT partition type. valid types can be found by `sgdisk -L`. default: `8300`   |
-| `size`          | `String` | Partition size (KMGPT) : `100M`                                                |
-| `start_sector`  | `Integer`| starting sector for the target partition                                       |
-| `end_sector`    | `Integer`| ending sector for the target partition                                         |
-| `action`        | `String` | `:create`, `:delete` or `:change_type`                                         |
-
-** Note **
-
-When creating a new partition, you can specify the size or the starting/ending sectors.
-
-- only size is specified : creates a partition from the default starting sector + size 
-- both of starting and ending sectors are specified : partition between the exact sectors. size will be ignored.
-- either starting or ending and size are specified : partition from starting sector + size or partition to ending sector - size
-
-See the test cookbook for examples.
 
 License and Author
 ==================
