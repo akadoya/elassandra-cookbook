@@ -1,7 +1,7 @@
 Description
 ===========
 
-Installs (Elassandra)[http://elassandra.readthedocs.io/] service.
+Installs [Elassandra](http://elassandra.readthedocs.io/) service.
 
 Requirements
 ============
